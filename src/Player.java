@@ -1,5 +1,3 @@
-package roadtogold;
-
 public final class Player {
     private final String name;
     private final String position;

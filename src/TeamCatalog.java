@@ -1,5 +1,3 @@
-package roadtogold;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -29,7 +27,7 @@ public final class TeamCatalog {
         List<Player> starters = new ArrayList<>();
         for (int i = 0; i < POSITIONS.length; i++) {
             int rating = names == null ? Math.max(45, Math.min(95, info.strength() + random.nextInt(13) - 6)) : MOCK_QUALITY[i];
-            String player = names == null ? info.name() + " " + POSITIONS[i] + " " + (i + 1) : names[i];
+            String player = names == null ? POSITIONS[i] + " " + (i + 1) : names[i];
             starters.add(new Player(player, POSITIONS[i], rating));
         }
         List<Player> bench = new ArrayList<>();
@@ -37,5 +35,11 @@ public final class TeamCatalog {
             bench.add(new Player("Suplente " + (i + 1), BENCH_POSITIONS[i], Math.max(45, info.strength() - 4 + random.nextInt(12))));
         }
         return new Team(info.name(), info.strength(), info.logo(), starters, bench);
+    }
+
+    public static Team createCustom(String name, int strength) {
+        int index = TEAMS.size() - 1;
+        Team generated = create(index);
+        return new Team(name, strength, TEAMS.get(index).logo(), generated.starters(), generated.substitutes());
     }
 }

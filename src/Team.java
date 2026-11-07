@@ -1,5 +1,3 @@
-package roadtogold;
-
 import java.util.List;
 
 public final class Team {
