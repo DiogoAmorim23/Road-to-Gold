@@ -8,8 +8,9 @@ public final class TeamCatalog {
     /** Os dados de cada jogador ficam juntos: nome, posição e qualidade. */
     public record PlayerInfo(String name, String position, int quality) { }
 
-    /** Cada equipa guarda o nome, a força, o emblema e os seus jogadores. */
-    public record TeamInfo(String name, int strength, String logo, List<PlayerInfo> players) { }
+    /** Cada equipa guarda separadamente os titulares e os suplentes. */
+    public record TeamInfo(String name, int strength, String logo,
+                           List<PlayerInfo> players, List<PlayerInfo> substitutes) { }
 
     private static final List<TeamInfo> TEAMS = List.of(
         new TeamInfo("SL Benfica", 77, "teams/SL_Benfica_logo.png", List.of(
@@ -24,6 +25,14 @@ public final class TeamCatalog {
             new PlayerInfo("Pavlidis", "ATA", 79),
             new PlayerInfo("Rafa", "ATA", 80),
             new PlayerInfo("Schjelderup", "ATA", 85)
+        ), List.of(
+            new PlayerInfo("Anatoliy Trubin", "GR", 84),
+            new PlayerInfo("António Silva", "DEF", 83),
+            new PlayerInfo("Nicolás Otamendi", "DEF", 82),
+            new PlayerInfo("Leandro Barreiro", "MED", 78),
+            new PlayerInfo("Florentino", "MED", 80),
+            new PlayerInfo("Andreas Schjelderup", "ATA", 79),
+            new PlayerInfo("Arthur Cabral", "ATA", 77)
         )),
         new TeamInfo("FC Porto", 78, "teams/FC_Porto_logo.png", List.of(
             new PlayerInfo("Diogo Costa", "GR", 85),
@@ -37,12 +46,20 @@ public final class TeamCatalog {
             new PlayerInfo("Pepê", "ATA", 79),
             new PlayerInfo("Rafa", "ATA", 80),
             new PlayerInfo("Oskar P.", "ATA", 85)
+        ), List.of(
+            new PlayerInfo("Cláudio Ramos", "GR", 78),
+            new PlayerInfo("Zé Pedro", "DEF", 76),
+            new PlayerInfo("João Mário", "DEF", 78),
+            new PlayerInfo("Eustáquio", "MED", 79),
+            new PlayerInfo("Grujić", "MED", 77),
+            new PlayerInfo("Gonçalo Borges", "ATA", 76),
+            new PlayerInfo("Deniz Gül", "ATA", 75)
         )),
-        new TeamInfo("Sporting CP", 76, "teams/Sporting_CP_logo.png", List.of()),
-        new TeamInfo("SC Braga", 72, "teams/SC_Braga_logo.png", List.of()),
-        new TeamInfo("Vitória SC", 70, "teams/Vitoria_SC_logo.png", List.of()),
-        new TeamInfo("Portugal", 82, "teams/Portugal_logo.png", List.of()),
-        new TeamInfo("Equipa personalizada", 70, "teams/custom_logo.png", List.of())
+        new TeamInfo("Sporting CP", 76, "teams/Sporting_CP_logo.png", List.of(), List.of()),
+        new TeamInfo("SC Braga", 72, "teams/SC_Braga_logo.png", List.of(), List.of()),
+        new TeamInfo("Vitória SC", 70, "teams/Vitoria_SC_logo.png", List.of(), List.of()),
+        new TeamInfo("Portugal", 82, "teams/Portugal_logo.png", List.of(), List.of()),
+        new TeamInfo("Equipa personalizada", 70, "teams/custom_logo.png", List.of(), List.of())
     );
 
     private static final String[] STARTING_POSITIONS = {
@@ -70,7 +87,12 @@ public final class TeamCatalog {
             starters.add(new Player(data.name(), data.position(), data.quality()));
         }
 
-        List<Player> substitutes = createSubstitutes(info.name(), info.strength());
+        List<Player> substitutes;
+        if (info.substitutes().isEmpty()) {
+            substitutes = createSubstitutes(info.name(), info.strength());
+        } else {
+            substitutes = convertPlayers(info.substitutes());
+        }
         return new Team(info.name(), info.strength(), info.logo(), starters, substitutes);
     }
 
@@ -83,6 +105,15 @@ public final class TeamCatalog {
             starters.add(new Player(data.name(), data.position(), data.quality()));
         }
         return new Team(name, strength, custom.logo(), starters, createSubstitutes(name, strength));
+    }
+
+    /** Converte os dados escritos no catálogo em objetos usados durante o jogo. */
+    private static List<Player> convertPlayers(List<PlayerInfo> playerData) {
+        List<Player> players = new ArrayList<>();
+        for (PlayerInfo data : playerData) {
+            players.add(new Player(data.name(), data.position(), data.quality()));
+        }
+        return players;
     }
 
     private static List<PlayerInfo> createExampleRoster(String teamName, int strength) {
