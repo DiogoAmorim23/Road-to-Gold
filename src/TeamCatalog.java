@@ -2,44 +2,107 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/** Lista as equipas do jogo e cria os respetivos plantéis. */
 public final class TeamCatalog {
-    public record TeamInfo(String name, int strength, String logo) { }
+
+    /** Os dados de cada jogador ficam juntos: nome, posição e qualidade. */
+    public record PlayerInfo(String name, String position, int quality) { }
+
+    /** Cada equipa guarda o nome, a força, o emblema e os seus jogadores. */
+    public record TeamInfo(String name, int strength, String logo, List<PlayerInfo> players) { }
+
     private static final List<TeamInfo> TEAMS = List.of(
-        new TeamInfo("SL Benfica", 77, "teams/SL_Benfica_logo.png"),
-        new TeamInfo("FC Porto", 78, "teams/FC_Porto_logo.png"),
-        new TeamInfo("Sporting CP", 76, "teams/Sporting_CP_logo.png"),
-        new TeamInfo("SC Braga", 72, "teams/SC_Braga_logo.png"),
-        new TeamInfo("Portugal", 82, "teams/Portugal_logo.png"),
-        new TeamInfo("Equipa personalizada", 70, "teams/custom_logo.png")
+        new TeamInfo("SL Benfica", 77, "teams/SL_Benfica_logo.png", List.of(
+            new PlayerInfo("Samuel Soares", "GR", 85),
+            new PlayerInfo("Tomás Araújo", "DEF", 89),
+            new PlayerInfo("Lenglet", "DEF", 84),
+            new PlayerInfo("Dahl", "DEF", 89),
+            new PlayerInfo("Bah", "DEF", 84),
+            new PlayerInfo("Palhinha", "MED", 77),
+            new PlayerInfo("Aursnes", "MED", 81),
+            new PlayerInfo("Prestianni", "MED", 89),
+            new PlayerInfo("Pavlidis", "ATA", 79),
+            new PlayerInfo("Rafa", "ATA", 80),
+            new PlayerInfo("Schjelderup", "ATA", 85)
+        )),
+        new TeamInfo("FC Porto", 78, "teams/FC_Porto_logo.png", List.of(
+            new PlayerInfo("Diogo Costa", "GR", 85),
+            new PlayerInfo("Martim Fernandes", "DEF", 89),
+            new PlayerInfo("Bednarek", "DEF", 84),
+            new PlayerInfo("Kiwior", "DEF", 89),
+            new PlayerInfo("Francisco Moura", "DEF", 84),
+            new PlayerInfo("Alan Varela", "MED", 77),
+            new PlayerInfo("Gabri Veiga", "MED", 81),
+            new PlayerInfo("Victor Froholdt", "MED", 89),
+            new PlayerInfo("Pepê", "ATA", 79),
+            new PlayerInfo("Rafa", "ATA", 80),
+            new PlayerInfo("Oskar P.", "ATA", 85)
+        )),
+        new TeamInfo("Sporting CP", 76, "teams/Sporting_CP_logo.png", List.of()),
+        new TeamInfo("SC Braga", 72, "teams/SC_Braga_logo.png", List.of()),
+        new TeamInfo("Vitória SC", 70, "teams/Vitoria_SC_logo.png", List.of()),
+        new TeamInfo("Portugal", 82, "teams/Portugal_logo.png", List.of()),
+        new TeamInfo("Equipa personalizada", 70, "teams/custom_logo.png", List.of())
     );
-    private static final String[] POSITIONS = {"GR", "DEF", "DEF", "DEF", "DEF", "MED", "MED", "MED", "ATA", "ATA", "ATA"};
-    private static final String[] BENFICA = {"Samuel Soares", "Tomás Araújo", "Lenglet", "Dahl", "Bah", "Palhinha", "Aursnes", "Prestianni", "Pavlidis", "Rafa", "Schjelderup"};
-    private static final String[] PORTO = {"Diogo Costa", "Martim Fernandes", "Bednarek", "Kiwior", "Francisco Moura", "Alan Varela", "Gabri Veiga", "Victor Froholdt", "Pepê", "Rafa", "Oskar P."};
-    private static final int[] MOCK_QUALITY = {85, 89, 84, 89, 84, 77, 81, 89, 79, 80, 85};
+
+    private static final String[] STARTING_POSITIONS = {
+        "GR", "DEF", "DEF", "DEF", "DEF", "MED", "MED", "MED", "ATA", "ATA", "ATA"
+    };
     private static final String[] BENCH_POSITIONS = {"GR", "DEF", "DEF", "MED", "MED", "ATA", "ATA"};
 
     private TeamCatalog() { }
+
+    /** Devolve a lista usada pelo menu de escolha das equipas. */
     public static List<TeamInfo> teams() { return TEAMS; }
+
+    /** Cria uma equipa a partir dos dados guardados no catálogo. */
     public static Team create(int index) {
         TeamInfo info = TEAMS.get(index);
-        String[] names = info.name().equals("SL Benfica") ? BENFICA : info.name().equals("FC Porto") ? PORTO : null;
-        Random random = new Random();
+        List<PlayerInfo> playerData = info.players();
+
+        // Equipas ainda sem plantel definido recebem jogadores simples gerados automaticamente.
+        if (playerData.isEmpty()) {
+            playerData = createExampleRoster(info.name(), info.strength());
+        }
+
         List<Player> starters = new ArrayList<>();
-        for (int i = 0; i < POSITIONS.length; i++) {
-            int rating = names == null ? Math.max(45, Math.min(95, info.strength() + random.nextInt(13) - 6)) : MOCK_QUALITY[i];
-            String player = names == null ? POSITIONS[i] + " " + (i + 1) : names[i];
-            starters.add(new Player(player, POSITIONS[i], rating));
+        for (PlayerInfo data : playerData) {
+            starters.add(new Player(data.name(), data.position(), data.quality()));
         }
-        List<Player> bench = new ArrayList<>();
-        for (int i = 0; i < BENCH_POSITIONS.length; i++) {
-            bench.add(new Player("Suplente " + (i + 1), BENCH_POSITIONS[i], Math.max(45, info.strength() - 4 + random.nextInt(12))));
-        }
-        return new Team(info.name(), info.strength(), info.logo(), starters, bench);
+
+        List<Player> substitutes = createSubstitutes(info.name(), info.strength());
+        return new Team(info.name(), info.strength(), info.logo(), starters, substitutes);
     }
 
+    /** Cria a equipa personalizada com o nome e a força escritos no menu. */
     public static Team createCustom(String name, int strength) {
-        int index = TEAMS.size() - 1;
-        Team generated = create(index);
-        return new Team(name, strength, TEAMS.get(index).logo(), generated.starters(), generated.substitutes());
+        TeamInfo custom = TEAMS.get(TEAMS.size() - 1);
+        List<PlayerInfo> playerData = createExampleRoster(name, strength);
+        List<Player> starters = new ArrayList<>();
+        for (PlayerInfo data : playerData) {
+            starters.add(new Player(data.name(), data.position(), data.quality()));
+        }
+        return new Team(name, strength, custom.logo(), starters, createSubstitutes(name, strength));
+    }
+
+    private static List<PlayerInfo> createExampleRoster(String teamName, int strength) {
+        List<PlayerInfo> players = new ArrayList<>();
+        Random random = new Random();
+        for (int i = 0; i < STARTING_POSITIONS.length; i++) {
+            String position = STARTING_POSITIONS[i];
+            int quality = Math.max(45, Math.min(95, strength + random.nextInt(13) - 6));
+            players.add(new PlayerInfo(position + " " + (i + 1), position, quality));
+        }
+        return players;
+    }
+
+    private static List<Player> createSubstitutes(String teamName, int strength) {
+        List<Player> substitutes = new ArrayList<>();
+        Random random = new Random();
+        for (int i = 0; i < BENCH_POSITIONS.length; i++) {
+            int quality = Math.max(45, Math.min(95, strength - 4 + random.nextInt(12)));
+            substitutes.add(new Player("Suplente " + (i + 1), BENCH_POSITIONS[i], quality));
+        }
+        return substitutes;
     }
 }

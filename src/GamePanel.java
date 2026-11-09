@@ -11,16 +11,20 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
+import java.awt.FontFormatException;
 
 public final class GamePanel extends JPanel implements MouseListener, MouseMotionListener {
     private enum Screen { MENU, SELECT_1V1, SELECT_SIMULATION, MATCH, PREDICTION }
     private static final int W = 1920, H = 1080;
     private final Map<String, BufferedImage> images = new HashMap<>();
+    private Font regularFont = new Font("SansSerif", Font.PLAIN, 12);
+    private Font boldFont = new Font("SansSerif", Font.BOLD, 12);
     private Screen screen = Screen.MENU;
     private int homeIndex = 0, awayIndex = 1, selectedCard = 0, menuHover = -1;
     private Team home, away;
     private int minute, homeGoals, awayGoals;
     private int[] selectedPlayer = {-1, -1}, benchIndex = {0, 0}, substitutions = {0, 0};
+    private boolean substitutesOpen;
     private final java.util.List<String> commentary = new ArrayList<>();
     private boolean running;
     private final javax.swing.Timer timer;
@@ -33,16 +37,33 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
         setBackground(new Color(6, 26, 56));
         setFocusable(true);
         addMouseListener(this); addMouseMotionListener(this);
+        loadFonts();
         for (int i=0;i<2;i++) {
             ((AbstractDocument)customNames[i].getDocument()).setDocumentFilter(new DocumentFilter() {
                 @Override public void insertString(FilterBypass fb,int offset,String string,AttributeSet attr)throws BadLocationException { if(string!=null && fb.getDocument().getLength()+string.length()<=16) super.insertString(fb,offset,string,attr); }
                 @Override public void replace(FilterBypass fb,int offset,int length,String string,AttributeSet attrs)throws BadLocationException { if(string!=null && fb.getDocument().getLength()-length+string.length()<=16) super.replace(fb,offset,length,string,attrs); }
             });
+            customNames[i].setFont(regularFont.deriveFont(16f));
+            customStrengths[i].setFont(regularFont.deriveFont(16f));
             add(customNames[i]); add(customStrengths[i]); customNames[i].setVisible(false); customStrengths[i].setVisible(false);
         }
         for (String path : new String[]{"backgrounds/menu.png", "backgrounds/1v1.png", "backgrounds/simulator.png", "assets/kicking_ball.png", "assets/game_logo.png"}) load(path);
         for (TeamCatalog.TeamInfo team : TeamCatalog.teams()) load(team.logo());
         timer = new javax.swing.Timer(350, e -> advanceMinute());
+    }
+
+    /** Carrega a fonte regular e a bold guardadas na pasta font do projeto. */
+    private void loadFonts() {
+        try {
+            Path regularPath = Path.of("font", "GlacialIndifference-Regular.otf");
+            Path boldPath = Path.of("font", "GlacialIndifference-Bold.otf");
+            if (!regularPath.toFile().isFile()) regularPath = Path.of("..", "font", "GlacialIndifference-Regular.otf");
+            if (!boldPath.toFile().isFile()) boldPath = Path.of("..", "font", "GlacialIndifference-Bold.otf");
+            regularFont = Font.createFont(Font.TRUETYPE_FONT, regularPath.toFile());
+            boldFont = Font.createFont(Font.TRUETYPE_FONT, boldPath.toFile());
+        } catch (IOException | FontFormatException ex) {
+            System.err.println("Não foi possível carregar a fonte Glacial Indifference: " + ex.getMessage());
+        }
     }
 
     private void load(String path) {
@@ -80,15 +101,15 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
 
     private void background(Graphics2D g, String path) { BufferedImage i=images.get(path); if(i!=null)g.drawImage(i,0,0,W,H,null); else {g.setColor(new Color(6,26,56));g.fillRect(0,0,W,H);} }
     private void rect(Graphics2D g, int x, int y, int width, int height, Color color) { g.setColor(color); g.fillRect(x,y,width,height); }
-    private void text(Graphics2D g, String text, int x, int y, int size, Color color, boolean bold) { g.setColor(color); g.setFont(new Font("Segoe UI", bold?Font.BOLD:Font.PLAIN,size)); g.drawString(text,x,y); }
-    private void center(Graphics2D g, String text, int x, int y, int size, Color color, boolean bold) { g.setFont(new Font("Segoe UI",bold?Font.BOLD:Font.PLAIN,size)); g.setColor(color); g.drawString(text,x-g.getFontMetrics().stringWidth(text)/2,y); }
+    private void text(Graphics2D g, String text, int x, int y, int size, Color color, boolean bold) { g.setColor(color); g.setFont((bold?boldFont:regularFont).deriveFont((float)size)); g.drawString(text,x,y); }
+    private void center(Graphics2D g, String text, int x, int y, int size, Color color, boolean bold) { g.setFont((bold?boldFont:regularFont).deriveFont((float)size)); g.setColor(color); g.drawString(text,x-g.getFontMetrics().stringWidth(text)/2,y); }
     private void image(Graphics2D g, String path, int x, int y, int maxW, int maxH) { BufferedImage i=images.get(path); if(i==null)return; double s=Math.min(maxW/(double)i.getWidth(),maxH/(double)i.getHeight()); int w=(int)(i.getWidth()*s),h=(int)(i.getHeight()*s);g.drawImage(i,x-w/2,y-h/2,w,h,null); }
 
     private void drawMenu(Graphics2D g) {
         background(g,"backgrounds/menu.png");
         image(g,"assets/game_logo.png",190,185,340,310);
         String[] options={"JOGAR MODO 1V1","JOGAR MODO SIMULAÇÃO","JOGAR MODO LIGA","DEFINIÇÕES","SAIR"};
-        for(int i=0;i<options.length;i++){int y=490+i*101;if(menuHover==i)drawArrow(g,15,y-44,52,Color.WHITE,true);text(g,options[i],76,y,56,Color.WHITE,true);}
+        for(int i=0;i<options.length;i++){int y=490+i*101;if(menuHover==i)drawArrow(g,15,y-44,52,Color.WHITE,true);text(g,options[i],76,y,56,Color.WHITE,menuHover==i);}
         text(g,"Diogo Amorim",14,1060,27,Color.WHITE,false);
     }
 
@@ -107,12 +128,13 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
     private void drawMatch(Graphics2D g) {
         background(g,"backgrounds/1v1.png");
         rect(g,86,66,214,79,Color.WHITE);center(g,"Sair",193,119,39,Color.BLACK,false);
-        rect(g,418,37,843,149,Color.WHITE); image(g,home.logoPath(),550,86,80,80);image(g,away.logoPath(),1150,86,80,80);
-        center(g,home.name(),550,164,30,Color.BLACK,false);center(g,away.name(),1150,164,30,Color.BLACK,false);center(g,homeGoals+" - "+awayGoals,840,126,58,Color.BLACK,true);center(g,String.format("%02d'",minute),840,165,25,Color.BLACK,false);
-        rect(g,85,219,1500,529,new Color(11,125,45));g.setColor(new Color(0,27,18));g.setStroke(new BasicStroke(8));g.drawRect(85,219,1500,529);
-        drawSquad(g,93,233,home,0); drawSquad(g,884,233,away,1);
-        rect(g,0,758,1340,322,new Color(29,43,54));text(g,"Relato da partida",18,793,21,Color.WHITE,true);rect(g,18,808,1312,252,new Color(20,33,43));int first=Math.max(0,commentary.size()-8);for(int i=first;i<commentary.size();i++)text(g,commentary.get(i),18,832+(i-first)*27,18,Color.WHITE,false);
-        rect(g,1390,764,258,181,Color.WHITE);image(g,"assets/kicking_ball.png",1510,854,180,150);drawPlayControl(g,1604,820,running);
+        rect(g,538,37,843,149,Color.WHITE); image(g,home.logoPath(),670,86,80,80);image(g,away.logoPath(),1250,86,80,80);
+        center(g,home.name(),670,164,30,Color.BLACK,false);center(g,away.name(),1250,164,30,Color.BLACK,false);center(g,homeGoals+" - "+awayGoals,960,126,58,Color.BLACK,true);center(g,String.format("%02d'",minute),960,165,25,Color.BLACK,false);
+        rect(g,85,219,1750,529,new Color(11,125,45));g.setColor(new Color(0,27,18));g.setStroke(new BasicStroke(8));g.drawRect(85,219,1750,529);
+        drawSquad(g,150,233,home,0); drawSquad(g,1057,233,away,1);
+        rect(g,0,758,1515,322,new Color(29,43,54));text(g,"Relato da partida",18,793,21,Color.WHITE,true);rect(g,18,808,1487,252,new Color(20,33,43));int first=Math.max(0,commentary.size()-8);for(int i=first;i<commentary.size();i++)text(g,commentary.get(i),18,832+(i-first)*27,18,Color.WHITE,false);
+        rect(g,1570,764,258,181,Color.WHITE);image(g,"assets/kicking_ball.png",1680,854,180,150);drawPlayControl(g,1780,820,running);
+        if(substitutesOpen) drawSubstituteMenu(g);
     }
 
     private void drawSquad(Graphics2D g,int x,int y,Team team,int side){
@@ -123,6 +145,7 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
 
     private void drawPlayControl(Graphics2D g,int cx,int top,boolean paused){g.setColor(Color.BLACK);if(paused){g.fillRect(cx-10,top,7,34);g.fillRect(cx+4,top,7,34);}else{Polygon p=new Polygon(new int[]{cx-8,cx+20,cx-8},new int[]{top,top+17,top+34},3);g.fillPolygon(p);}}
     private void drawDownArrow(Graphics2D g,int x,int y,int size,Color color){g.setColor(color);g.fillPolygon(new int[]{x,x+size,x+size/2},new int[]{y,y,y+size},3);}
+    private void drawSubstituteMenu(Graphics2D g){int side=selectedCard,left=side==0?150:1057;Team team=side==0?home:away;int y=736;rect(g,left,y,436,team.substitutes().size()*38+8,Color.WHITE);for(int i=0;i<team.substitutes().size();i++){Player p=team.substitutes().get(i);int rowY=y+4+i*38;if(i==benchIndex[side])rect(g,left+2,rowY,432,36,new Color(215,232,218));text(g,p.name()+" - "+p.position()+" - "+p.energy()+"%",left+8,rowY+25,19,Color.BLACK,false);}}
 
     private void drawPrediction(Graphics2D g){
         background(g,"backgrounds/simulator.png");prediction=MatchMath.predict(home,away);rect(g,135,94,1650,424,Color.WHITE);rect(g,680,51,560,82,new Color(201,211,220));center(g,"Probabilidades de desfecho",960,105,39,Color.BLACK,true);
@@ -146,7 +169,7 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
         else if(screen==Screen.MATCH)handleMatchClick(x,y);
     }
     private void handleSelectionClick(int x,int y){int side=-1,start=0,end=0;if(x>=135&&x<=807){side=0;start=135;end=807;}else if(x>=1114&&x<=1786){side=1;start=1114;end=1786;}if(side<0||y<520||y>760)return;selectedCard=side;if(x<start+180)changeTeam(side,-1);else if(x>end-180)changeTeam(side,1);}
-    private void handleMatchClick(int x,int y){if(x>=86&&x<=300&&y>=66&&y<=145){timer.stop();running=false;screen=Screen.SELECT_1V1;repaint();return;}if(x>=1390&&x<=1648&&y>=764&&y<=945){running=!running;if(running)timer.start();else timer.stop();repaint();return;}for(int side=0;side<2;side++){if(side!=selectedCard)continue;int left=side==0?93:884;if(x<left||x>left+713)continue;if(y>=290&&y<=665){int row=(y-290)/34;if(row<11)selectedPlayer[side]=row;}else if(y>=691&&y<=735){if(x<=left+436)benchIndex[side]=(benchIndex[side]+1)%7;else substitute(side);}repaint();return;}}
+    private void handleMatchClick(int x,int y){if(x>=86&&x<=300&&y>=66&&y<=145){timer.stop();running=false;substitutesOpen=false;screen=Screen.SELECT_1V1;repaint();return;}if(x>=1570&&x<=1828&&y>=764&&y<=945){running=!running;if(running)timer.start();else timer.stop();repaint();return;}int side=selectedCard,left=side==0?150:1057;if(substitutesOpen&&x>=left&&x<=left+436&&y>=736&&y<736+7*38+8){benchIndex[side]=Math.min(6,(y-740)/38);substitutesOpen=false;repaint();return;}if(x<left||x>left+713)return;if(y>=290&&y<=665){int row=(y-290)/34;if(row<11)selectedPlayer[side]=row;}else if(y>=691&&y<=735){if(x<=left+436)substitutesOpen=!substitutesOpen;else substitute(side);}repaint();}
     @Override public void mouseExited(MouseEvent e){if(screen==Screen.MENU&&menuHover!=-1){menuHover=-1;repaint();}}
     @Override public void mouseEntered(MouseEvent e){} @Override public void mousePressed(MouseEvent e){} @Override public void mouseReleased(MouseEvent e){} @Override public void mouseDragged(MouseEvent e){}
 }
