@@ -14,46 +14,46 @@ public final class TeamCatalog {
 
     private static final List<TeamInfo> TEAMS = List.of(
         new TeamInfo("SL Benfica", 82, "teams/SL_Benfica_logo.png", List.of(
-            new PlayerInfo("Samuel Soares", "GR", 85),
-            new PlayerInfo("Tomás Araújo", "DEF", 89),
-            new PlayerInfo("Lenglet", "DEF", 84),
-            new PlayerInfo("Samuel Dahl", "DEF", 89),
-            new PlayerInfo("Alexander Bah", "DEF", 84),
-            new PlayerInfo("J. Palhinha", "MED", 77),
+            new PlayerInfo("Samuel Soares", "GR", 76),
+            new PlayerInfo("Tomás Araújo", "DEF", 80),
+            new PlayerInfo("Lenglet", "DEF", 79),
+            new PlayerInfo("Samuel Dahl", "DEF", 75),
+            new PlayerInfo("Alexander Bah", "DEF", 79),
+            new PlayerInfo("J. Palhinha", "MED", 84),
             new PlayerInfo("Aursnes", "MED", 81),
-            new PlayerInfo("Prestianni", "MED", 89),
-            new PlayerInfo("Pavlidis", "ATA", 79),
-            new PlayerInfo("Rafa", "ATA", 80),
-            new PlayerInfo("Schjelderup", "ATA", 85)
+            new PlayerInfo("Prestianni", "MED", 77),
+            new PlayerInfo("Pavlidis", "ATA", 83),
+            new PlayerInfo("Rafa", "ATA", 81),
+            new PlayerInfo("Schjelderup", "ATA", 78)
         ), List.of(
-            new PlayerInfo("Anatoliy Trubin", "GR", 84),
-            new PlayerInfo("A. Circati", "DEF", 83),
-            new PlayerInfo("Daniel Banjaqui", "DEF", 82),
+            new PlayerInfo("Anatoliy Trubin", "GR", 82),
+            new PlayerInfo("A. Circati", "DEF", 76),
+            new PlayerInfo("Daniel Banjaqui", "DEF", 72),
             new PlayerInfo("Leandro Barreiro", "MED", 78),
-            new PlayerInfo("Enzo Barrenechea", "MED", 80),
-            new PlayerInfo("Lukebakio", "ATA", 79),
-            new PlayerInfo("Jhon Durán", "ATA", 77)
+            new PlayerInfo("Enzo Barrenechea", "MED", 77),
+            new PlayerInfo("Lukebakio", "ATA", 80),
+            new PlayerInfo("Jhon Durán", "ATA", 81)
         )),
         new TeamInfo("FC Porto", 84, "teams/FC_Porto_logo.png", List.of(
             new PlayerInfo("Diogo Costa", "GR", 85),
-            new PlayerInfo("Martim Fernandes", "DEF", 89),
-            new PlayerInfo("Bednarek", "DEF", 84),
-            new PlayerInfo("Kiwior", "DEF", 89),
-            new PlayerInfo("Francisco Moura", "DEF", 84),
-            new PlayerInfo("Alan Varela", "MED", 77),
-            new PlayerInfo("Gabri Veiga", "MED", 81),
-            new PlayerInfo("Victor Froholdt", "MED", 89),
-            new PlayerInfo("Pepê", "ATA", 79),
-            new PlayerInfo("Samu", "ATA", 80),
-            new PlayerInfo("Oskar P.", "ATA", 85)
+            new PlayerInfo("Martim Fernandes", "DEF", 80),
+            new PlayerInfo("Bednarek", "DEF", 80),
+            new PlayerInfo("Kiwior", "DEF", 81),
+            new PlayerInfo("Francisco Moura", "DEF", 81),
+            new PlayerInfo("Alan Varela", "MED", 84),
+            new PlayerInfo("Gabri Veiga", "MED", 82),
+            new PlayerInfo("Victor Froholdt", "MED", 77),
+            new PlayerInfo("Pepê", "ATA", 81),
+            new PlayerInfo("Samu", "ATA", 83),
+            new PlayerInfo("O. Pietuszewski", "ATA", 77)
         ), List.of(
             new PlayerInfo("Cláudio Ramos", "GR", 78),
-            new PlayerInfo("Zé Pedro", "DEF", 76),
-            new PlayerInfo("João Mário", "DEF", 78),
-            new PlayerInfo("Eustáquio", "MED", 79),
+            new PlayerInfo("Nehuén Pérez", "DEF", 81),
+            new PlayerInfo("João Mário", "DEF", 79),
+            new PlayerInfo("Eustáquio", "MED", 78),
             new PlayerInfo("Grujić", "MED", 77),
-            new PlayerInfo("Gonçalo Borges", "ATA", 76),
-            new PlayerInfo("Deniz Gül", "ATA", 75)
+            new PlayerInfo("Gonçalo Borges", "ATA", 77),
+            new PlayerInfo("Deniz Gül", "ATA", 76)
         )),
         new TeamInfo("Sporting CP", 81, "teams/Sporting_CP_logo.png", List.of(), List.of()),
 
@@ -87,7 +87,27 @@ public final class TeamCatalog {
         
         new TeamInfo("GD Estoril Praia", 61, "teams/Estoril_Praia_logo.png", List.of(), List.of()),
 
-        new TeamInfo("Portugal", 87, "teams/Portugal_logo.png", List.of(), List.of()),
+        new TeamInfo("Portugal", 87, "teams/Portugal_logo.png", List.of(
+            new PlayerInfo("Diogo Costa", "GR", 85),
+            new PlayerInfo("João Cancelo", "DEF", 83),
+            new PlayerInfo("Renato Veiga", "DEF", 80),
+            new PlayerInfo("Rúben Dias", "DEF", 89),
+            new PlayerInfo("Nuno Mendes", "DEF", 85),
+            new PlayerInfo("João Neves", "MED", 84),
+            new PlayerInfo("Vitinha", "MED", 88),
+            new PlayerInfo("Bruno Fernandes", "MED", 88),
+            new PlayerInfo("Rafael Leão", "ATA", 85),
+            new PlayerInfo("João Félix", "ATA", 82),
+            new PlayerInfo("C. Ronaldo", "ATA", 86)
+        ), List.of(
+            new PlayerInfo("Samuel Soares", "GR", 76),
+            new PlayerInfo("Diogo Dalot", "DEF", 82),
+            new PlayerInfo("Tomás Araújo", "DEF", 80),
+            new PlayerInfo("Rúben Neves", "MED", 83),
+            new PlayerInfo("Bernardo Silva", "MED", 88),
+            new PlayerInfo("F. Trincão", "ATA", 81),
+            new PlayerInfo("Gonçalo Ramos", "ATA", 82)
+        )),
         
         new TeamInfo("Equipa personalizada", 70, "teams/custom_logo.png", List.of(), List.of())
     );
