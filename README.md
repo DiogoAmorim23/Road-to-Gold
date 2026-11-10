@@ -52,6 +52,6 @@ The first `List.of(...)` contains the 11 starters. The second contains the subst
 
 ## Screenshots
 
-<img width="1675" height="985" alt="1v1 screen" src="https://github.com/user-attachments/assets/8d7fc17e-e850-486a-9a20-febde1de483f" />
+<img width="1675" height="984" alt="1v1 screen" src="https://github.com/user-attachments/assets/17f16d16-d6ec-4e3d-8b3a-331b4bc85a86" />
 
-<img width="1675" height="984" alt="simulator-menu" src="https://github.com/user-attachments/assets/9401a720-c198-4311-9553-524f87f51b4f" />
+<img width="1675" height="985" alt="simulator-menu" src="https://github.com/user-attachments/assets/ee4bb309-bf6b-44df-8450-ef1d4ffa88ac" />
