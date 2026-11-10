@@ -13,7 +13,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 public final class GamePanel extends JPanel implements MouseListener, MouseMotionListener {
-    private enum Screen { MENU, SELECT_1V1, SELECT_SIMULATION, MATCH, PREDICTION }
+    private enum Screen { MENU, SETTINGS, SELECT_1V1, SELECT_SIMULATION, MATCH, PREDICTION }
     private static final int W = 1920, H = 1080;
     private final Map<String, BufferedImage> images = new HashMap<>();
     private Font regularFont = new Font("SansSerif", Font.PLAIN, 12);
@@ -21,6 +21,12 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
     private Screen screen = Screen.MENU;
     private int homeIndex = 0, awayIndex = 1, selectedCard = 0, menuHover = -1;
     private String hoveredButton = "";
+    private final javax.swing.Timer menuTransition;
+    private int transitionOffset;
+    private boolean transitionToSettings;
+    private boolean transitioning;
+    private int speedIndex = 1;
+    private int volume = 70;
     private Team home, away;
     private int minute, homeGoals, awayGoals;
     private int[] selectedPlayer = {-1, -1}, benchIndex = {0, 0}, substitutions = {0, 0};
@@ -52,6 +58,8 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
         for (String path : new String[]{"backgrounds/menu.png", "backgrounds/1v1.png", "backgrounds/simulator.png", "assets/kicking_ball.png", "assets/game_logo.png"}) load(path);
         for (TeamCatalog.TeamInfo team : TeamCatalog.teams()) load(team.logo());
         timer = new javax.swing.Timer(350, e -> advanceMinute());
+        volume = SoundPlayer.volume();
+        menuTransition = new javax.swing.Timer(15, e -> animateMenuTransition());
     }
 
     /** Carrega a fonte regular e a bold guardadas na pasta font do projeto. */
@@ -81,7 +89,7 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
     @Override protected void paintComponent(Graphics raw) {
         super.paintComponent(raw); Graphics2D g = (Graphics2D) raw.create();
         g.scale(sx(), sy()); g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        switch (screen) { case MENU -> drawMenu(g); case SELECT_1V1, SELECT_SIMULATION -> drawSelection(g); case MATCH -> drawMatch(g); case PREDICTION -> drawPrediction(g); }
+        switch (screen) { case MENU, SETTINGS -> drawMenuPage(g); case SELECT_1V1, SELECT_SIMULATION -> drawSelection(g); case MATCH -> drawMatch(g); case PREDICTION -> drawPrediction(g); }
         layoutCustomFields();
         g.dispose();
     }
@@ -109,11 +117,36 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
 
     private void drawMenu(Graphics2D g) {
         background(g,"backgrounds/menu.png");
+        drawMenuContents(g);
+    }
+
+    private void drawMenuContents(Graphics2D g){
         image(g,"assets/game_logo.png",190,185,340,310);
         String[] options={"JOGAR MODO 1V1","JOGAR MODO SIMULAÇÃO","JOGAR MODO LIGA","DEFINIÇÕES","SAIR"};
         for(int i=0;i<options.length;i++){int y=490+i*101;if(menuHover==i)drawArrow(g,15,y-44,52,Color.WHITE,true);text(g,options[i],76,490+i*101,56,Color.WHITE,menuHover==i||i==4&&"menu-exit".equals(hoveredButton));}
         text(g,"Diogo Amorim",14,1060,27,Color.WHITE,false);
     }
+
+    private void drawMenuPage(Graphics2D g){
+        if(!transitioning){if(screen==Screen.SETTINGS){background(g,"backgrounds/menu.png");drawSettingsContents(g);}else drawMenu(g);return;}
+        background(g,"backgrounds/menu.png");Graphics2D outgoing=(Graphics2D)g.create(),incoming=(Graphics2D)g.create();
+        if(transitionToSettings){outgoing.translate(-transitionOffset,0);incoming.translate(-W+transitionOffset,0);drawMenuContents(outgoing);drawSettingsContents(incoming);}
+        else{outgoing.translate(-transitionOffset,0);incoming.translate(-W+transitionOffset,0);drawSettingsContents(outgoing);drawMenuContents(incoming);}
+        outgoing.dispose();incoming.dispose();
+    }
+
+    private void drawSettingsContents(Graphics2D g){
+        text(g,"DEFINIÇÕES",110,130,72,Color.WHITE,true);
+        text(g,"Velocidade",110,330,48,Color.WHITE,false);
+        String[] speeds={"Lenta","Normal","Rápida"};
+        for(int i=0;i<speeds.length;i++){int x=110+i*250;boolean selected=i==speedIndex;rect(g,x,370,210,72,selected?new Color(8,124,112):new Color(201,211,220));center(g,speeds[i],x+105,418,30,selected?Color.WHITE:Color.BLACK,selected||hoveredButton.equals("speed-"+i));}
+        text(g,"Volume",110,560,48,Color.WHITE,false);rect(g,110,600,600,20,new Color(201,211,220));rect(g,110,600,600*volume/100,20,new Color(8,124,112));g.setColor(Color.WHITE);g.fillOval(95+600*volume/100,590,40,40);text(g,volume+"%",740,620,30,Color.WHITE,false);
+        text(g,"Voltar",45,1034,42,Color.WHITE,hoveredButton.equals("settings-back"));
+    }
+
+    private void beginMenuTransition(boolean toSettings){if(transitioning)return;transitioning=true;transitionToSettings=toSettings;transitionOffset=0;menuHover=-1;setHoveredButton("");menuTransition.start();repaint();}
+    private void animateMenuTransition(){transitionOffset+=Math.max(24,W/30);if(transitionOffset>=W){transitionOffset=W;menuTransition.stop();transitioning=false;screen=transitionToSettings?Screen.SETTINGS:Screen.MENU;}repaint();}
+    private void setSpeed(int index){speedIndex=index;int[] delays={650,350,150};timer.setDelay(delays[index]);timer.setInitialDelay(delays[index]);}
 
     private void drawSelection(Graphics2D g) {
         boolean sim=screen==Screen.SELECT_SIMULATION; background(g,sim?"backgrounds/simulator.png":"backgrounds/1v1.png");
@@ -198,13 +231,15 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
 
     private void setHoveredButton(String button){if(Objects.equals(hoveredButton,button))return;hoveredButton=button;repaint();}
     @Override public void mouseMoved(MouseEvent e){Point p=logical(e);int next=-1;String button="";
-        if(screen==Screen.MENU){for(int i=0;i<5;i++)if(p.x<900&&p.y>=430+i*101&&p.y<=520+i*101)next=i;if(next==4)button="menu-exit";}
+        if(screen==Screen.MENU&&!transitioning){for(int i=0;i<5;i++)if(p.x<900&&p.y>=430+i*101&&p.y<=520+i*101)next=i;if(next==4)button="menu-exit";}
+        else if(screen==Screen.SETTINGS&&!transitioning){if(p.y>960&&p.x<260)button="settings-back";else if(p.y>=370&&p.y<=442){int index=(p.x-110)/250;if(index>=0&&index<3)button="speed-"+index;}}
         else if(screen==Screen.SELECT_1V1||screen==Screen.SELECT_SIMULATION){if(p.y>960&&p.x<260)button="selection-back";else if(p.y>930&&p.x>1580)button="selection-action";}
         else if(screen==Screen.MATCH){if(p.x>=86&&p.x<=300&&p.y>=66&&p.y<=145)button="match-exit";else if(p.x>=1570&&p.x<=1828&&p.y>=764&&p.y<=945&&!matchFinished)button="match-play";}
         else if(screen==Screen.PREDICTION&&p.y>960&&p.x<260)button="prediction-back";
         if(next!=menuHover){menuHover=next;repaint();}setHoveredButton(button);
     }
-    @Override public void mouseClicked(MouseEvent e){Point p=logical(e);int x=p.x,y=p.y;if(screen==Screen.MENU){for(int i=0;i<5;i++)if(x<900&&y>=430+i*101&&y<=520+i*101){SoundPlayer.play("click_sound.wav");if(i==0)screen=Screen.SELECT_1V1;else if(i==1)screen=Screen.SELECT_SIMULATION;else if(i==4)SwingUtilities.getWindowAncestor(this).dispose();repaint();return;}}
+    @Override public void mouseClicked(MouseEvent e){Point p=logical(e);int x=p.x,y=p.y;if(transitioning)return;if(screen==Screen.MENU){for(int i=0;i<5;i++)if(x<900&&y>=430+i*101&&y<=520+i*101){SoundPlayer.play("click_sound.wav");if(i==0)screen=Screen.SELECT_1V1;else if(i==1)screen=Screen.SELECT_SIMULATION;else if(i==3)beginMenuTransition(true);else if(i==4)SwingUtilities.getWindowAncestor(this).dispose();repaint();return;}}
+        else if(screen==Screen.SETTINGS){if(y>960&&x<260){SoundPlayer.play("click_sound.wav");beginMenuTransition(false);}else if(y>=370&&y<=442){int index=(x-110)/250;if(index>=0&&index<3)setSpeed(index);}else if(y>=570&&y<=650&&x>=100&&x<=730){volume=Math.max(0,Math.min(100,(x-110)*100/600));SoundPlayer.setVolume(volume);}repaint();}
         else if(screen==Screen.SELECT_1V1||screen==Screen.SELECT_SIMULATION){if(y>960&&x<260){SoundPlayer.play("click_sound.wav");screen=Screen.MENU;}else if(y>930&&x>1580){SoundPlayer.play("click_sound.wav");start();return;}else handleSelectionClick(x,y);repaint();}
         else if(screen==Screen.PREDICTION&&y>960){screen=Screen.SELECT_SIMULATION;repaint();}
         else if(screen==Screen.MATCH)handleMatchClick(x,y);
@@ -212,5 +247,6 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
     private void handleSelectionClick(int x,int y){int side=-1,start=0,end=0;if(x>=135&&x<=807){side=0;start=135;end=807;}else if(x>=1114&&x<=1786){side=1;start=1114;end=1786;}if(side<0||y<520||y>760)return;selectedCard=side;if(x<start+180)changeTeam(side,-1);else if(x>end-180)changeTeam(side,1);}
     private void handleMatchClick(int x,int y){if(x>=86&&x<=300&&y>=66&&y<=145){SoundPlayer.play("click_sound.wav");timer.stop();running=false;substitutesOpen=false;screen=Screen.SELECT_1V1;repaint();return;}if(x>=1570&&x<=1828&&y>=764&&y<=945){if(matchFinished)return;SoundPlayer.play("click_sound.wav");if(!matchStarted){matchStarted=true;commentary.add("Apito inicial. Boa partida!");SoundPlayer.play("referee_whistle.wav");}running=!running;if(running)timer.start();else timer.stop();repaint();return;}if(matchFinished)return;int side=selectedCard,left=side==0?150:1057;if(substitutesOpen&&x>=left&&x<=left+436&&y>=736&&y<736+7*38+8){benchIndex[side]=Math.min(6,(y-740)/38);substitutesOpen=false;repaint();return;}if(x<left||x>left+713)return;if(y>=290&&y<=665){int row=(y-290)/34;if(row<11)selectedPlayer[side]=row;}else if(y>=691&&y<=735){if(x<=left+436)substitutesOpen=!substitutesOpen;else substitute(side);}repaint();}
     @Override public void mouseExited(MouseEvent e){if(menuHover!=-1){menuHover=-1;repaint();}setHoveredButton("");}
-    @Override public void mouseEntered(MouseEvent e){} @Override public void mousePressed(MouseEvent e){} @Override public void mouseReleased(MouseEvent e){} @Override public void mouseDragged(MouseEvent e){}
+    @Override public void mouseEntered(MouseEvent e){} @Override public void mousePressed(MouseEvent e){} @Override public void mouseReleased(MouseEvent e){}
+    @Override public void mouseDragged(MouseEvent e){if(screen==Screen.SETTINGS&&!transitioning){Point p=logical(e);if(p.y>=570&&p.y<=650&&p.x>=100&&p.x<=730){volume=Math.max(0,Math.min(100,(p.x-110)*100/600));SoundPlayer.setVolume(volume);repaint();}}}
 }
