@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
-import java.awt.FontFormatException;
 
 public final class GamePanel extends JPanel implements MouseListener, MouseMotionListener {
     private enum Screen { MENU, SELECT_1V1, SELECT_SIMULATION, MATCH, PREDICTION }
@@ -150,13 +149,13 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
     private void drawSquad(Graphics2D g,int x,int y,Team team,int side){
         text(g,"Jogador",x+28,y+31,31,Color.WHITE,true);text(g,"Pos.",x+215,y+31,31,Color.WHITE,true);text(g,"Energia",x+355,y+31,31,Color.WHITE,true);text(g,"Qualidade",x+520,y+31,31,Color.WHITE,true);rect(g,x,y+49,713,4,Color.WHITE);
         for(int i=0;i<team.starters().size();i++){Player p=team.starters().get(i);int yy=y+81+i*34;if(selectedPlayer[side]==i)rect(g,x+4,yy-20,705,33,new Color(7,102,36));text(g,p.name(),x+5,yy,24,Color.WHITE,false);text(g,p.position(),x+237,yy,22,Color.WHITE,false);rect(g,x+325,yy-14,103,28,Color.WHITE);Color energyColor=p.energy()>=70?new Color(80,215,109):(p.energy()>=30?new Color(255,210,55):new Color(225,55,55));rect(g,x+325,yy-14,(int)(103*p.energy()/100.0),28,energyColor);text(g,p.energy()+"%",x+437,yy,21,Color.WHITE,false);text(g,String.valueOf(p.quality()),x+583,yy,22,Color.WHITE,false);}
-        int yy=y+458;boolean canManage=(side==selectedCard&&!matchFinished);Color controlBg=canManage?Color.WHITE:new Color(195,195,195);rect(g,x,yy,436,44,controlBg);Player b=team.substitutes().get(benchIndex[side]);text(g,b.name()+" - "+b.position()+" - "+b.energy()+"%",x+5,yy+28,20,Color.BLACK,false);if(canManage)drawDownArrow(g,x+398,yy+10,22,Color.BLACK);rect(g,x+444,yy,236,44,controlBg);center(g,"Substituir selecionado",x+562,yy+28,18,canManage?Color.BLACK:Color.GRAY,false);
+        int yy=y+458;boolean canManage=(side==selectedCard&&!matchFinished);Color controlBg=canManage?Color.WHITE:new Color(195,195,195);rect(g,x,yy,436,44,controlBg);Player b=team.substitutes().get(benchIndex[side]);text(g,b.name()+" - "+b.position()+" - "+b.energy()+"% - "+b.quality(),x+5,yy+28,20,Color.BLACK,false);if(canManage)drawDownArrow(g,x+398,yy+10,22,Color.BLACK);rect(g,x+444,yy,236,44,controlBg);center(g,"Substituir selecionado",x+562,yy+28,18,canManage?Color.BLACK:Color.GRAY,false);
     }
 
     private void drawPlayControl(Graphics2D g,int cx,int top,boolean paused,boolean disabled,boolean hovered){g.setColor(disabled?Color.GRAY:Color.BLACK);if(paused){g.fillRect(cx-10,top,7,34);g.fillRect(cx+4,top,7,34);}else{Polygon p=new Polygon(new int[]{cx-8,cx+20,cx-8},new int[]{top,top+17,top+34},3);g.fillPolygon(p);}}
     private void drawDownArrow(Graphics2D g,int x,int y,int size,Color color){g.setColor(color);g.fillPolygon(new int[]{x,x+size,x+size/2},new int[]{y,y,y+size},3);}
     private void imageDisabled(Graphics2D g,String path,int x,int y,int maxW,int maxH){BufferedImage source=images.get(path);if(source==null)return;double scale=Math.min(maxW/(double)source.getWidth(),maxH/(double)source.getHeight());int w=(int)(source.getWidth()*scale),h=(int)(source.getHeight()*scale);BufferedImage gray=new BufferedImage(w,h,BufferedImage.TYPE_INT_RGB);Graphics2D copy=gray.createGraphics();copy.drawImage(source,0,0,w,h,null);copy.dispose();for(int py=0;py<h;py++)for(int px=0;px<w;px++){int rgb=gray.getRGB(px,py),r=(rgb>>16)&255,gr=(rgb>>8)&255,b=rgb&255;int light=(r+gr+b)/3;if(light>225)light=190;gray.setRGB(px,py,(light<<16)|(light<<8)|light);}g.drawImage(gray,x-w/2,y-h/2,null);}
-    private void drawSubstituteMenu(Graphics2D g){int side=selectedCard,left=side==0?150:1057;Team team=side==0?home:away;int y=736;rect(g,left,y,436,team.substitutes().size()*38+8,Color.WHITE);for(int i=0;i<team.substitutes().size();i++){Player p=team.substitutes().get(i);int rowY=y+4+i*38;if(i==benchIndex[side])rect(g,left+2,rowY,432,36,new Color(215,232,218));text(g,p.name()+" - "+p.position()+" - "+p.energy()+"%",left+8,rowY+25,19,Color.BLACK,false);}}
+    private void drawSubstituteMenu(Graphics2D g){int side=selectedCard,left=side==0?150:1057;Team team=side==0?home:away;int y=736;rect(g,left,y,436,team.substitutes().size()*38+8,Color.WHITE);for(int i=0;i<team.substitutes().size();i++){Player p=team.substitutes().get(i);int rowY=y+4+i*38;if(i==benchIndex[side])rect(g,left+2,rowY,432,36,new Color(215,232,218));text(g,p.name()+" - "+p.position()+" - "+p.energy()+"% - "+p.quality(),left+8,rowY+25,19,Color.BLACK,false);}}
 
     private void drawPrediction(Graphics2D g){
         background(g,"backgrounds/simulator.png");rect(g,135,94,1650,424,Color.WHITE);rect(g,680,51,560,82,new Color(201,211,220));center(g,"Probabilidades de desfecho",960,105,39,Color.BLACK,true);
