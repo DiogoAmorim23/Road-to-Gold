@@ -182,7 +182,7 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
     private void drawSquad(Graphics2D g,int x,int y,Team team,int side){
         text(g,"Jogador",x+28,y+31,31,Color.WHITE,true);text(g,"Pos.",x+215,y+31,31,Color.WHITE,true);text(g,"Energia",x+355,y+31,31,Color.WHITE,true);text(g,"Qualidade",x+520,y+31,31,Color.WHITE,true);rect(g,x,y+49,713,4,Color.WHITE);
         for(int i=0;i<team.starters().size();i++){Player p=team.starters().get(i);int yy=y+81+i*34;if(selectedPlayer[side]==i)rect(g,x+4,yy-20,705,33,new Color(7,102,36));text(g,p.name(),x+5,yy,24,Color.WHITE,false);text(g,p.position(),x+237,yy,22,Color.WHITE,false);rect(g,x+325,yy-14,103,28,Color.WHITE);Color energyColor=p.energy()>=70?new Color(80,215,109):(p.energy()>=30?new Color(255,210,55):new Color(225,55,55));rect(g,x+325,yy-14,(int)(103*p.energy()/100.0),28,energyColor);text(g,p.energy()+"%",x+437,yy,21,Color.WHITE,false);text(g,String.valueOf(p.quality()),x+583,yy,22,Color.WHITE,false);}
-        int yy=y+458;boolean canManage=(side==selectedCard&&!matchFinished);Color controlBg=canManage?Color.WHITE:new Color(195,195,195);rect(g,x,yy,436,44,controlBg);Player b=team.substitutes().get(benchIndex[side]);text(g,b.name()+" - "+b.position()+" - "+b.energy()+"% - "+b.quality(),x+5,yy+28,20,Color.BLACK,false);if(canManage)drawDownArrow(g,x+398,yy+10,22,Color.BLACK);rect(g,x+444,yy,236,44,controlBg);center(g,"Substituir selecionado",x+562,yy+28,18,canManage?Color.BLACK:Color.GRAY,false);
+        int yy=y+458;boolean canManage=(side==selectedCard&&!matchFinished);Color controlBg=canManage?Color.WHITE:new Color(195,195,195);rect(g,x,yy,436,44,controlBg);if(!team.substitutes().isEmpty()){Player b=team.substitutes().get(Math.min(benchIndex[side],team.substitutes().size()-1));text(g,b.name()+" - "+b.position()+" - "+b.energy()+"% - "+b.quality(),x+5,yy+28,20,Color.BLACK,false);}if(canManage&&!team.substitutes().isEmpty())drawDownArrow(g,x+398,yy+10,22,Color.BLACK);rect(g,x+444,yy,236,44,controlBg);center(g,"Substituir selecionado",x+562,yy+28,18,canManage?Color.BLACK:Color.GRAY,false);
     }
 
     private void drawPlayControl(Graphics2D g,int cx,int top,boolean paused,boolean disabled,boolean hovered){g.setColor(disabled?Color.GRAY:Color.BLACK);if(paused){g.fillRect(cx-10,top,7,34);g.fillRect(cx+4,top,7,34);}else{Polygon p=new Polygon(new int[]{cx-8,cx+20,cx-8},new int[]{top,top+17,top+34},3);g.fillPolygon(p);}}
@@ -205,6 +205,7 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
         if(!running||matchFinished)return;
         minute++;
         for(Team team:new Team[]{home,away})for(Player player:team.starters())player.tire();
+        makeOpponentSubstitution();
         boolean goalScored=false;
         for(int side=0;side<2;side++){
             Team team=side==0?home:away;
@@ -226,7 +227,47 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
     }
 
     private void afterGoalPause(Runnable afterPause){javax.swing.Timer pause=new javax.swing.Timer(2000,e->afterPause.run());pause.setRepeats(false);pause.start();}
-    private void substitute(int side){if(substitutions[side]>=5||selectedPlayer[side]<0)return;Team team=side==0?home:away;int i=selectedPlayer[side], b=benchIndex[side];Player out=team.starters().get(i), in=team.substitutes().get(b);if(!out.position().equals(in.position())){commentary.add("Substituição inválida: as posições têm de coincidir.");return;}team.starters().set(i,in);team.substitutes().set(b,out);substitutions[side]++;commentary.add(team.name()+": entra "+in.name()+", sai "+out.name()+".");}
+    /** O treinador adversário pode trocar, aleatoriamente, um titular cansado. */
+    private void makeOpponentSubstitution(){
+        int side=1-selectedCard;
+        Team team=side==0?home:away;
+        if(substitutions[side]>=5||team.substitutes().isEmpty()||Math.random()>=0.18)return;
+        java.util.List<Integer> tiredPlayers=new ArrayList<>();
+        for(int i=0;i<team.starters().size();i++){
+            Player starter=team.starters().get(i);
+            if(starter.energy()<69&&hasSubstituteFor(team,starter.position()))tiredPlayers.add(i);
+        }
+        if(tiredPlayers.isEmpty())return;
+        int playerIndex=tiredPlayers.get((int)(Math.random()*tiredPlayers.size()));
+        Player tired=team.starters().get(playerIndex);
+        int subIndex=-1;
+        for(int i=0;i<team.substitutes().size();i++){
+            if(team.substitutes().get(i).position().equals(tired.position())){subIndex=i;break;}
+        }
+        if(subIndex<0)return;
+        replacePlayer(side,playerIndex,subIndex);
+    }
+    private boolean hasSubstituteFor(Team team,String position){
+        for(Player substitute:team.substitutes())if(substitute.position().equals(position))return true;
+        return false;
+    }
+    private void substitute(int side){
+        Team team=side==0?home:away;
+        int playerIndex=selectedPlayer[side], substituteIndex=benchIndex[side];
+        if(matchFinished||substitutions[side]>=5||playerIndex<0||team.substitutes().isEmpty())return;
+        Player out=team.starters().get(playerIndex), in=team.substitutes().get(substituteIndex);
+        if(!out.position().equals(in.position())){commentary.add("Substituição inválida: as posições têm de coincidir.");return;}
+        replacePlayer(side,playerIndex,substituteIndex);
+    }
+    /** Remove o suplente usado da lista, para ninguém que saiu voltar a entrar. */
+    private void replacePlayer(int side,int playerIndex,int substituteIndex){
+        Team team=side==0?home:away;
+        Player out=team.starters().get(playerIndex), in=team.substitutes().remove(substituteIndex);
+        team.starters().set(playerIndex,in);
+        substitutions[side]++;
+        benchIndex[side]=team.substitutes().isEmpty()?0:Math.min(benchIndex[side],team.substitutes().size()-1);
+        commentary.add(team.name()+": entra "+in.name()+", sai "+out.name()+".");
+    }
     private Point logical(MouseEvent e){return new Point((int)(e.getX()/sx()),(int)(e.getY()/sy()));}
 
     private void setHoveredButton(String button){if(Objects.equals(hoveredButton,button))return;hoveredButton=button;repaint();}
@@ -245,7 +286,7 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
         else if(screen==Screen.MATCH)handleMatchClick(x,y);
     }
     private void handleSelectionClick(int x,int y){int side=-1,start=0,end=0;if(x>=135&&x<=807){side=0;start=135;end=807;}else if(x>=1114&&x<=1786){side=1;start=1114;end=1786;}if(side<0||y<520||y>760)return;selectedCard=side;if(x<start+180)changeTeam(side,-1);else if(x>end-180)changeTeam(side,1);}
-    private void handleMatchClick(int x,int y){if(x>=86&&x<=300&&y>=66&&y<=145){SoundPlayer.play("click_sound.wav");timer.stop();running=false;substitutesOpen=false;screen=Screen.SELECT_1V1;repaint();return;}if(x>=1570&&x<=1828&&y>=764&&y<=945){if(matchFinished)return;SoundPlayer.play("click_sound.wav");if(!matchStarted){matchStarted=true;commentary.add("Apito inicial. Boa partida!");SoundPlayer.play("referee_whistle.wav");}running=!running;if(running)timer.start();else timer.stop();repaint();return;}if(matchFinished)return;int side=selectedCard,left=side==0?150:1057;if(substitutesOpen&&x>=left&&x<=left+436&&y>=736&&y<736+7*38+8){benchIndex[side]=Math.min(6,(y-740)/38);substitutesOpen=false;repaint();return;}if(x<left||x>left+713)return;if(y>=290&&y<=665){int row=(y-290)/34;if(row<11)selectedPlayer[side]=row;}else if(y>=691&&y<=735){if(x<=left+436)substitutesOpen=!substitutesOpen;else substitute(side);}repaint();}
+    private void handleMatchClick(int x,int y){if(x>=86&&x<=300&&y>=66&&y<=145){SoundPlayer.play("click_sound.wav");timer.stop();running=false;substitutesOpen=false;screen=Screen.SELECT_1V1;repaint();return;}if(x>=1570&&x<=1828&&y>=764&&y<=945){if(matchFinished)return;SoundPlayer.play("click_sound.wav");if(!matchStarted){matchStarted=true;commentary.add("Apito inicial. Boa partida!");SoundPlayer.play("referee_whistle.wav");}running=!running;if(running)timer.start();else timer.stop();repaint();return;}if(matchFinished)return;int side=selectedCard,left=side==0?150:1057;Team team=side==0?home:away;if(substitutesOpen&&x>=left&&x<=left+436&&y>=736&&y<736+team.substitutes().size()*38+8&&!team.substitutes().isEmpty()){benchIndex[side]=Math.min(team.substitutes().size()-1,(y-740)/38);substitutesOpen=false;repaint();return;}if(x<left||x>left+713)return;if(y>=290&&y<=665){int row=(y-290)/34;if(row<11)selectedPlayer[side]=row;}else if(y>=691&&y<=735){if(x<=left+436&&!team.substitutes().isEmpty())substitutesOpen=!substitutesOpen;else substitute(side);}repaint();}
     @Override public void mouseExited(MouseEvent e){if(menuHover!=-1){menuHover=-1;repaint();}setHoveredButton("");}
     @Override public void mouseEntered(MouseEvent e){} @Override public void mousePressed(MouseEvent e){} @Override public void mouseReleased(MouseEvent e){}
     @Override public void mouseDragged(MouseEvent e){if(screen==Screen.SETTINGS&&!transitioning){Point p=logical(e);if(p.y>=570&&p.y<=650&&p.x>=100&&p.x<=730){volume=Math.max(0,Math.min(100,(p.x-110)*100/600));SoundPlayer.setVolume(volume);repaint();}}}
