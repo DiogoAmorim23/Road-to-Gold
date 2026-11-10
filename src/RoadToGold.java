@@ -1,5 +1,7 @@
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import javax.swing.ImageIcon;
+import java.io.File;
 
 /** Ponto de entrada: cria a janela principal e inicia a interface Swing. */
 public final class RoadToGold {
@@ -10,6 +12,10 @@ public final class RoadToGold {
             JFrame window = new JFrame("Road to Gold");
             // Configura a janela e coloca nela o painel com os ecrãs do jogo.
             window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            File logo = new File("assets/game_logo.png");
+            if (logo.isFile()) {
+                window.setIconImage(new ImageIcon(logo.getPath()).getImage());
+            }
             window.setContentPane(new GamePanel());
             window.pack();
             window.setLocationRelativeTo(null);
