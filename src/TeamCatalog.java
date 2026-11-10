@@ -55,7 +55,27 @@ public final class TeamCatalog {
             new PlayerInfo("Gonçalo Borges", "ATA", 77),
             new PlayerInfo("Deniz Gül", "ATA", 76)
         )),
-        new TeamInfo("Sporting CP", 81, "teams/Sporting_CP_logo.png", List.of(), List.of()),
+        new TeamInfo("Sporting CP", 81, "teams/Sporting_CP_logo.png", List.of(
+            new PlayerInfo("Kaique Pereira", "GR", 76),
+            new PlayerInfo("Quaresma", "DEF", 79),
+            new PlayerInfo("Gonçalo Inácio", "DEF", 83),
+            new PlayerInfo("Maxi Araújo", "DEF", 80),
+            new PlayerInfo("Fresneda", "DEF", 78),
+            new PlayerInfo("Doumbia", "MED", 77),
+            new PlayerInfo("S. Andersen", "MED", 79),
+            new PlayerInfo("S. Altimira", "MED", 80),
+            new PlayerInfo("Geny Catamo", "ATA", 79),
+            new PlayerInfo("R. Zalazar", "ATA", 81),
+            new PlayerInfo("Luis Suárez", "ATA", 84)
+        ), List.of(
+            new PlayerInfo("Rui Silva", "GR", 80),
+            new PlayerInfo("Vagiannidis", "DEF", 77),
+            new PlayerInfo("Debast", "DEF", 79),
+            new PlayerInfo("João Simões", "MED", 75),
+            new PlayerInfo("Luís Guilherme", "MED", 78),
+            new PlayerInfo("F. Ioannidis", "ATA", 81),
+            new PlayerInfo("Rafael Nel", "ATA", 74)
+        )),
 
         new TeamInfo("CD Santa Clara", 76, "teams/Santa_Clara_logo.png", List.of(), List.of()),
 
