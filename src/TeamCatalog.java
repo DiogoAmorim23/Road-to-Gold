@@ -13,13 +13,13 @@ public final class TeamCatalog {
                            List<PlayerInfo> players, List<PlayerInfo> substitutes) { }
 
     private static final List<TeamInfo> TEAMS = List.of(
-        new TeamInfo("SL Benfica", 77, "teams/SL_Benfica_logo.png", List.of(
+        new TeamInfo("SL Benfica", 82, "teams/SL_Benfica_logo.png", List.of(
             new PlayerInfo("Samuel Soares", "GR", 85),
             new PlayerInfo("Tomás Araújo", "DEF", 89),
             new PlayerInfo("Lenglet", "DEF", 84),
-            new PlayerInfo("Dahl", "DEF", 89),
-            new PlayerInfo("Bah", "DEF", 84),
-            new PlayerInfo("Palhinha", "MED", 77),
+            new PlayerInfo("Samuel Dahl", "DEF", 89),
+            new PlayerInfo("Alexander Bah", "DEF", 84),
+            new PlayerInfo("J. Palhinha", "MED", 77),
             new PlayerInfo("Aursnes", "MED", 81),
             new PlayerInfo("Prestianni", "MED", 89),
             new PlayerInfo("Pavlidis", "ATA", 79),
@@ -27,14 +27,14 @@ public final class TeamCatalog {
             new PlayerInfo("Schjelderup", "ATA", 85)
         ), List.of(
             new PlayerInfo("Anatoliy Trubin", "GR", 84),
-            new PlayerInfo("António Silva", "DEF", 83),
-            new PlayerInfo("Nicolás Otamendi", "DEF", 82),
+            new PlayerInfo("A. Circati", "DEF", 83),
+            new PlayerInfo("Daniel Banjaqui", "DEF", 82),
             new PlayerInfo("Leandro Barreiro", "MED", 78),
-            new PlayerInfo("Florentino", "MED", 80),
-            new PlayerInfo("Andreas Schjelderup", "ATA", 79),
-            new PlayerInfo("Arthur Cabral", "ATA", 77)
+            new PlayerInfo("Enzo Barrenechea", "MED", 80),
+            new PlayerInfo("Lukebakio", "ATA", 79),
+            new PlayerInfo("Jhon Durán", "ATA", 77)
         )),
-        new TeamInfo("FC Porto", 78, "teams/FC_Porto_logo.png", List.of(
+        new TeamInfo("FC Porto", 84, "teams/FC_Porto_logo.png", List.of(
             new PlayerInfo("Diogo Costa", "GR", 85),
             new PlayerInfo("Martim Fernandes", "DEF", 89),
             new PlayerInfo("Bednarek", "DEF", 84),
@@ -44,7 +44,7 @@ public final class TeamCatalog {
             new PlayerInfo("Gabri Veiga", "MED", 81),
             new PlayerInfo("Victor Froholdt", "MED", 89),
             new PlayerInfo("Pepê", "ATA", 79),
-            new PlayerInfo("Rafa", "ATA", 80),
+            new PlayerInfo("Samu", "ATA", 80),
             new PlayerInfo("Oskar P.", "ATA", 85)
         ), List.of(
             new PlayerInfo("Cláudio Ramos", "GR", 78),
@@ -55,10 +55,40 @@ public final class TeamCatalog {
             new PlayerInfo("Gonçalo Borges", "ATA", 76),
             new PlayerInfo("Deniz Gül", "ATA", 75)
         )),
-        new TeamInfo("Sporting CP", 76, "teams/Sporting_CP_logo.png", List.of(), List.of()),
+        new TeamInfo("Sporting CP", 81, "teams/Sporting_CP_logo.png", List.of(), List.of()),
+
+        new TeamInfo("CD Santa Clara", 76, "teams/Santa_Clara_logo.png", List.of(), List.of()),
+
+        new TeamInfo("FC Arouca", 75, "teams/FC_Arouca_logo.png", List.of(), List.of()),
+
+        new TeamInfo("Académico de Viseu", 74, "teams/Academico_Viseu_logo.png", List.of(), List.of()),
+
+        new TeamInfo("Gil Vicente FC", 72, "teams/GilVicente_logo.png", List.of(), List.of()),
+
         new TeamInfo("SC Braga", 72, "teams/SC_Braga_logo.png", List.of(), List.of()),
+
+        new TeamInfo("Moreirense FC", 70, "teams/Moreirense_FC_logo.png", List.of(), List.of()),
+
+        new TeamInfo("FC Famalicão", 70, "teams/FC_Famalicao_logo.png", List.of(), List.of()),
+
+        new TeamInfo("FC Alverca", 68, "teams/FC_Alverca_logo.png", List.of(), List.of()),
+
+        new TeamInfo("Estrela da Amadora", 67, "teams/Estrela_Amadora_logo.png", List.of(), List.of()),
+
+        new TeamInfo("CD Nacional", 66, "teams/CD_Nacional_logo.png", List.of(), List.of()),
+
         new TeamInfo("Vitória SC", 70, "teams/Vitoria_SC_logo.png", List.of(), List.of()),
-        new TeamInfo("Portugal", 82, "teams/Portugal_logo.png", List.of(), List.of()),
+
+        new TeamInfo("SC Marítimo", 65, "teams/SC_Maritimo_logo.png", List.of(), List.of()),
+
+        new TeamInfo("Casa Pia AC", 65, "teams/Casa_Pia_AC_logo.png", List.of(), List.of()),
+
+        new TeamInfo("Rio Ave FC", 64, "teams/Rio_Ave_FC_logo.png", List.of(), List.of()),
+        
+        new TeamInfo("GD Estoril Praia", 61, "teams/Estoril_Praia_logo.png", List.of(), List.of()),
+
+        new TeamInfo("Portugal", 87, "teams/Portugal_logo.png", List.of(), List.of()),
+        
         new TeamInfo("Equipa personalizada", 70, "teams/custom_logo.png", List.of(), List.of())
     );
 
