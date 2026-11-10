@@ -120,7 +120,7 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
         text(g,sim?"MODO SIMULAÇÃO RÁPIDA":"MODO 1V1",110,132,74,Color.WHITE,true);
         text(g,sim?"Escolhe qualquer equipa e descobre quais os resultados mais prováveis.":"Escolhe as equipas e acompanha a partida minuto a minuto.",110,194,39,Color.WHITE,false);
         drawTeamCard(g,135,267,"Casa",homeIndex,0); drawTeamCard(g,1114,267,"Fora",awayIndex,1);
-        if(!sim){int selectedX=selectedCard==0?135:1114;rect(g,selectedX,902,672,70,new Color(8,124,112));center(g,"SELECIONADO",selectedX+336,948,28,Color.WHITE,true);}
+        if(!sim){int selectedX=selectedCard==0?135:1114;rect(g,selectedX-10,902,692,70,new Color(8,124,112));center(g,"SELECIONADO",selectedX+336,948,28,Color.WHITE,true);}
         text(g,"Voltar",45,1034,42,Color.WHITE,false); text(g,sim?"Simular":"Jogar",1665,1013,38,Color.WHITE,false); drawArrow(g,1810,951,84,Color.WHITE,true);
     }
 
@@ -144,7 +144,7 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
 
     private void drawSquad(Graphics2D g,int x,int y,Team team,int side){
         text(g,"Jogador",x+28,y+31,31,Color.WHITE,true);text(g,"Pos.",x+215,y+31,31,Color.WHITE,true);text(g,"Energia",x+355,y+31,31,Color.WHITE,true);text(g,"Qualidade",x+520,y+31,31,Color.WHITE,true);rect(g,x,y+49,713,4,Color.WHITE);
-        for(int i=0;i<team.starters().size();i++){Player p=team.starters().get(i);int yy=y+81+i*34;if(selectedPlayer[side]==i)rect(g,x+4,yy-20,705,33,new Color(7,102,36));text(g,p.name(),x+5,yy,24,Color.WHITE,false);text(g,p.position(),x+237,yy,22,Color.WHITE,false);rect(g,x+325,yy-14,103,28,Color.WHITE);rect(g,x+325,yy-14,(int)(103*p.energy()/100.0),28,new Color(80,215,109));text(g,p.energy()+"%",x+437,yy,21,Color.WHITE,false);text(g,String.valueOf(p.quality()),x+583,yy,22,Color.WHITE,false);}
+        for(int i=0;i<team.starters().size();i++){Player p=team.starters().get(i);int yy=y+81+i*34;if(selectedPlayer[side]==i)rect(g,x+4,yy-20,705,33,new Color(7,102,36));text(g,p.name(),x+5,yy,24,Color.WHITE,false);text(g,p.position(),x+237,yy,22,Color.WHITE,false);rect(g,x+325,yy-14,103,28,Color.WHITE);Color energyColor=p.energy()>=70?new Color(80,215,109):(p.energy()>=30?new Color(255,210,55):new Color(225,55,55));rect(g,x+325,yy-14,(int)(103*p.energy()/100.0),28,energyColor);text(g,p.energy()+"%",x+437,yy,21,Color.WHITE,false);text(g,String.valueOf(p.quality()),x+583,yy,22,Color.WHITE,false);}
         int yy=y+458;boolean canManage=(side==selectedCard);Color controlBg=canManage?Color.WHITE:new Color(195,195,195);rect(g,x,yy,436,44,controlBg);Player b=team.substitutes().get(benchIndex[side]);text(g,b.name()+" - "+b.position()+" - "+b.energy()+"%",x+5,yy+28,20,Color.BLACK,false);if(canManage)drawDownArrow(g,x+398,yy+10,22,Color.BLACK);rect(g,x+444,yy,236,44,controlBg);center(g,"Substituir selecionado",x+562,yy+28,18,canManage?Color.BLACK:Color.GRAY,false);
     }
 
@@ -164,7 +164,31 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
     private void start(){if(homeIndex==awayIndex)awayIndex=(awayIndex+1)%TeamCatalog.teams().size();home=createSelectedTeam(0);away=createSelectedTeam(1);if(screen==Screen.SELECT_SIMULATION){prediction=MatchMath.predict(home,away);screen=Screen.PREDICTION;}else{screen=Screen.MATCH;minute=homeGoals=awayGoals=0;matchFinished=false;matchStarted=false;running=false;selectedPlayer=new int[]{-1,-1};benchIndex=new int[]{0,0};substitutions=new int[]{0,0};commentary.clear();}repaint();}
     private Team createSelectedTeam(int side){int index=side==0?homeIndex:awayIndex;if(index!=TeamCatalog.teams().size()-1)return TeamCatalog.create(index);return TeamCatalog.createCustom(customNames[side].getText().trim().isEmpty()?"A minha equipa":customNames[side].getText().trim(),(Integer)customStrengths[side].getValue());}
     private void changeTeam(int side,int direction){int n=TeamCatalog.teams().size();if(side==0)homeIndex=(homeIndex+direction+n)%n;else awayIndex=(awayIndex+direction+n)%n;}
-    private void advanceMinute(){if(!running||matchFinished)return;minute++;for(Team team:new Team[]{home,away})for(Player player:team.starters())player.tire();for(int side=0;side<2;side++){Team team=side==0?home:away;double current=team.starters().stream().mapToDouble(p->p.quality()*p.energy()/100.0).average().orElse(team.strength());if(Math.random()<.022*current/75*(side==0?1.08:.96)){if(side==0)homeGoals++;else awayGoals++;commentary.add("GOLO aos "+minute+"'! "+team.name()+".");}}if(minute==45){commentary.add("Intervalo.");SoundPlayer.play("referee_whistle.wav");running=false;timer.stop();}if(minute>=90){commentary.add("Apito final.");SoundPlayer.play("referee_whistle.wav");running=false;matchFinished=true;timer.stop();}repaint();}
+    private void advanceMinute(){
+        if(!running||matchFinished)return;
+        minute++;
+        for(Team team:new Team[]{home,away})for(Player player:team.starters())player.tire();
+        boolean goalScored=false;
+        for(int side=0;side<2;side++){
+            Team team=side==0?home:away;
+            double current=team.starters().stream().mapToDouble(p->p.quality()*p.energy()/100.0).average().orElse(team.strength());
+            if(!goalScored&&Math.random()<.022*current/75*(side==0?1.08:.96)){
+                if(side==0)homeGoals++;else awayGoals++;
+                commentary.add("GOLO aos "+minute+"'! "+team.name()+".");
+                goalScored=true;
+            }
+        }
+        if(goalScored){
+            timer.stop();
+            SoundPlayer.play("goal_sound.WAV");
+        }
+        if(minute==45){commentary.add("Intervalo.");running=false;timer.stop();if(goalScored)afterGoalPause(()->SoundPlayer.play("referee_whistle.wav"));else SoundPlayer.play("referee_whistle.wav");}
+        if(minute>=90){commentary.add("Apito final.");running=false;matchFinished=true;timer.stop();if(goalScored)afterGoalPause(()->SoundPlayer.play("referee_whistle.wav"));else SoundPlayer.play("referee_whistle.wav");}
+        repaint();
+        if(goalScored&&minute<45||goalScored&&minute>45&&minute<90)afterGoalPause(()->{if(running&&!matchFinished&&screen==Screen.MATCH)timer.start();});
+    }
+
+    private void afterGoalPause(Runnable afterPause){javax.swing.Timer pause=new javax.swing.Timer(2000,e->afterPause.run());pause.setRepeats(false);pause.start();}
     private void substitute(int side){if(substitutions[side]>=5||selectedPlayer[side]<0)return;Team team=side==0?home:away;int i=selectedPlayer[side], b=benchIndex[side];Player out=team.starters().get(i), in=team.substitutes().get(b);if(!out.position().equals(in.position())){commentary.add("Substituição inválida: as posições têm de coincidir.");return;}team.starters().set(i,in);team.substitutes().set(b,out);substitutions[side]++;commentary.add(team.name()+": entra "+in.name()+", sai "+out.name()+".");}
     private Point logical(MouseEvent e){return new Point((int)(e.getX()/sx()),(int)(e.getY()/sy()));}
 
