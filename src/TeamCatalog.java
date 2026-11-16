@@ -93,7 +93,27 @@ public final class TeamCatalog {
 
         new TeamInfo("FC Alverca", 68, "teams/FC_Alverca_logo.png", List.of(), List.of()),
 
-        new TeamInfo("Estrela da Amadora", 67, "teams/Estrela_Amadora_logo.png", List.of(), List.of()),
+        new TeamInfo("Estrela da Amadora", 67, "teams/Estrela_Amadora_logo.png", List.of(
+            new PlayerInfo("Leo Linck", "GR", 69),
+            new PlayerInfo("M. Scholze", "DEF", 66),
+            new PlayerInfo("Bernardo Schappo", "DEF", 67),
+            new PlayerInfo("Luan Patrick", "DEF", 67),
+            new PlayerInfo("Rafa Soares", "DEF", 69),
+            new PlayerInfo("S. Serra", "MED", 66),
+            new PlayerInfo("K. Jansson", "MED", 67),
+            new PlayerInfo("L. Zvoranek", "MED", 66),
+            new PlayerInfo("Abraham Marcus", "ATA", 68),
+            new PlayerInfo("Ianis Stoica", "ATA", 68),
+            new PlayerInfo("L. Antonetti", "ATA", 67)
+        ), List.of(
+            new PlayerInfo("Diogo Pinto", "GR", 66),
+            new PlayerInfo("J. Encada", "DEF", 64),
+            new PlayerInfo("Chernev", "DEF", 65),
+            new PlayerInfo("Eddy Doué", "MED", 65),
+            new PlayerInfo("Tom Moustier", "MED", 65),
+            new PlayerInfo("Mitongo", "ATA", 65),
+            new PlayerInfo("Alisson Souza", "ATA", 64)
+        )),
 
         new TeamInfo("CD Nacional", 66, "teams/CD_Nacional_logo.png", List.of(), List.of()),
 
