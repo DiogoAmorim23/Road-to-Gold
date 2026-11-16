@@ -7,4 +7,5 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
-java -cp out RoadToGold
+start "" javaw -cp out RoadToGold
+exit /b 0

@@ -51,7 +51,7 @@ public final class TeamCatalog {
             new PlayerInfo("Nehuén Pérez", "DEF", 81),
             new PlayerInfo("João Mário", "DEF", 79),
             new PlayerInfo("Eustáquio", "MED", 78),
-            new PlayerInfo("Grujić", "MED", 77),
+            new PlayerInfo("Grujic", "MED", 77),
             new PlayerInfo("Gonçalo Borges", "ATA", 77),
             new PlayerInfo("Deniz Gül", "ATA", 76)
         )),
