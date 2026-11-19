@@ -212,7 +212,9 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
             double current=team.starters().stream().mapToDouble(p->p.quality()*p.energy()/100.0).average().orElse(team.strength());
             if(!goalScored&&Math.random()<.022*current/75*(side==0?1.08:.96)){
                 if(side==0)homeGoals++;else awayGoals++;
-                commentary.add("GOLO aos "+minute+"'! "+team.name()+".");
+                Player scorer=chooseScorer(team);
+                String scorerText=scorer==null?"": " "+scorer.name()+" marcou pela equipa.";
+                commentary.add("GOLO aos "+minute+"'! "+team.name()+"."+scorerText);
                 goalScored=true;
             }
         }
@@ -227,6 +229,27 @@ public final class GamePanel extends JPanel implements MouseListener, MouseMotio
     }
 
     private void afterGoalPause(Runnable afterPause){javax.swing.Timer pause=new javax.swing.Timer(2000,e->afterPause.run());pause.setRepeats(false);pause.start();}
+    /** Sorteia o marcador usando posição, qualidade e energia como pesos. */
+    private Player chooseScorer(Team team){
+        double totalWeight=0;
+        for(Player player:team.starters())totalWeight+=scorerWeight(player);
+        if(totalWeight<=0)return null;
+        double draw=Math.random()*totalWeight;
+        for(Player player:team.starters()){
+            draw-=scorerWeight(player);
+            if(draw<0)return player;
+        }
+        return null;
+    }
+    private double scorerWeight(Player player){
+        double positionWeight=switch(player.position().trim().toUpperCase(Locale.ROOT)){
+            case "ATA" -> 1.00;
+            case "MED" -> 0.35;
+            case "DEF" -> 0.08;
+            default -> 0.00;
+        };
+        return positionWeight*(player.quality()/80.0)*(player.energy()/100.0);
+    }
     /** O treinador adversário pode trocar, aleatoriamente, um titular cansado. */
     private void makeOpponentSubstitution(){
         int side=1-selectedCard;
